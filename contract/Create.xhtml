@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "htt//www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http//www.w3.org/1999/xhtml"
+      xmlns:v-for="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-if="htt//xmlns.jcp.org/jsf/passthrough">
+    <v-form id="ContractCreateForm" 
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Contract}'"
+            action="/admin/rh/api/contract"
+            >
+        <div>
+            <v-fieldset legend="#{bundle.Entity}" v-if="o.ext" class="v-form">
+                <label>#{bundle.Search}:</label>
+                <v-autocomplete queryEvent="enter" placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                                minQueryLength="3" id="company" 
+                                v-bind:disabled="o.company#{bundle.AND}!o.company.id"
+                                emptyMessage="Buscar por nombre (2 caracteres min.)" 
+                                required="required" 
+                                v-model="o.company" src="/admin/directory/api/company"
+                                label="businessName">
+                    <template v-slot="{row}">
+                        <table class="transparent">
+                            <tr>
+                                <td style="width:50px; max-width: 50px" align="center" >
+                                    <img id="foto" class="white" style="  width:100%;max-height: 60px"
+                                         v-bind:src="'/thumb/100/foto/'+row.id+'.jpg'" >
+                                    </img>
+                                </td>
+                                <td>
+                                    <a v-bind:href="'/admin/directorio/'+row.id" onclick="return _.o(this)" class="ui-link">
+                                        {{row.businessName}}
+                                        <br/>RUC: {{row.ruc}}
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </template>
+                </v-autocomplete>
+                <div class="right">
+                    <v-button icon="fa-plus" style="margin-top:10px" value="Nueva #{bundle.Entity}" v-on:click.prevent="o.company={};$forceUpdate()"/>
+                    <v-button icon="fa-minus" v-bind:disabled="!o.company" style="margin-top:10px"
+                              v-on:click.prevent="o.company=null;$forceUpdate()"/>
+                </div>
+                <div v-if="o.company#{bundle.AND}!o.company.id" class="v-panel v-form">
+                    <label>#{bundle.Ruc}:</label>
+                    <input required="true" v-model="o.company.ruc" />
+                    <label>#{bundle.BusinessName}:</label>
+                    <v-textarea required="true" rows="2" id="businessName" v-model="o.company.businessName" />
+                </div>
+            </v-fieldset>
+            <v-fieldset legend="#{bundle.Employee}" class="v-form">
+                <div v-show="!o.ext.editPeople">
+                    <label v-show="!o.people||o.people.id" >#{bundle.Search}:</label>
+                    <v-autocomplete v-show="!o.people||o.people.id" placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                                    minQueryLength="3" required="required"
+                                    v-bind:disabled="o.people#{bundle.AND}!o.people.id"
+                                    v-model="o.people" src="/admin/directory/api/people"
+                                    label="fullName">
+                        <template v-slot="{row}">
+                            <table class="transparent">
+                                <tr>
+                                    <td style="width:50px;padding:0px" align="center" >
+                                        <img style="width:100%;max-height: 250px"
+                                             v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                        </img>
+                                    </td>
+                                    <td>
+                                        <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                            {{row.fullName}}
+                                            <div v-bind:style="'color:'+ row.numeroPndid?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </template>
+                    </v-autocomplete>
+                </div>
+                <div class="right">
+                    <v-button icon="fa-plus" v-bind:disabled="o.people#{bundle.AND}!o.people.id" style="margin-top:10px" value="Nuevo Empleado" 
+                              v-on:click.prevent="o.people={document:{}};$forceUpdate()"/>
+                    <v-button icon="fa-minus" v-bind:disabled="!(o.people#{bundle.AND}!o.people.id)" style="margin-top:10px"
+                              v-on:click.prevent="o.people=null;$forceUpdate()"/>
+                </div>
+                <div v-if="o.people#{bundle.AND}!o.people.id" class="v-panel">
+                    <v-fieldset class="v-form" style="margin:20px 0px;padding-bottom: 18px" legend="#{bundle.Documento} #{bundle.Identidad}" > 
+                        <label>#{bundle.Tipo}:</label>
+                        <v-select id="idPdid" styleClass="required" required="true" v-model="o.people.document" >
+                            <option>#{bundle.SelectOneMessage}</option>
+                            <v-options url="/admin/directory/api/document-type/0/0"
+                                       display-field="name" />
+                        </v-select>
+                        <label>#{bundle.Numero}:</label>
+                        <input id="numeroPndid" type="tel" maxlength="12" styleClass="center" required="true"  immediate="true" pattern="[0-9]*"
+                               v-model="o.people.code"  />
+                    </v-fieldset>
+                    <div class="v-form">
+                        <label>#{bundle.Name}:</label>
+                        <input required="true" id="nombres" maxlength="80" v-model="o.people.names" />
+                        <label>#{bundle.ApPaterno}:</label>
+                        <input required="true" id="apPaterno" maxlength="50" v-model="o.people.apPaterno" />
+                        <label>#{bundle.ApMaterno}:</label>
+                        <input required="true" id="apMaterno" maxlength="50" v-model="o.people.apMaterno" />
+                        <label>#{bundle.Birthdate}:</label>
+                        <v-calendar v-model="o.people.birthdate"/>
+                        <label>#{bundle.Sex}:</label>
+                        <v-radio-group required="true" v-model="o.people.sex">
+                            <v-radio label="Masculino" value="M" />
+                            <v-radio label="Femenino" value="F" />
+                        </v-radio-group>
+                        <label>#{bundle.Mail}:</label>
+                        <input id="mail" v-model="o.people.mail" />
+                        <label>#{bundle.Phone}:</label>
+                        <input id="phone" v-model="o.people.phone" />
+                        <label>#{bundle.Address}:</label>
+                        <v-textarea id="address" maxlength="200" v-model="o.people.address" />
+                        <label>#{bundle.Remark}:</label>
+                        <v-textarea maxlength="250" v-model="o.people.observacion" />
+                    </div>
+                </div>
+            </v-fieldset>
+            <v-fieldset legend="#{bundle.Dependency}" class="v-form">
+
+                <v-select v-model="o.dependencyId" v-bind:disabled="!!o.ext.dependency">
+                    <option value="0">#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/directory/api/dependency" value-field="id" display-field="fullName"/>
+                </v-select>
+                <div class="right">
+                    <v-button icon="fa-plus" style="margin-top:10px" value="Nueva Dependencia" v-on:click.prevent="o.ext.dependency={}" v-bind:disabled="!!o.ext.dependency"/>
+                    <v-button icon="fa-minus" v-bind:disabled="!o.ext.dependency" style="margin-top:10px"
+                              v-on:click.prevent="o.ext.dependency=null"/>
+                </div>
+                <div class="v-panel v-form" v-if="o.ext.dependency">
+                    <label>#{bundle.Type}:</label>
+                        <v-select id="dependencyType" styleClass="required" required="true" v-model="o.ext.dependency.type" >
+                            <option>#{bundle.SelectOneMessage}</option>
+                            <v-options url="/admin/directory/api/dependency-type/0/0"
+                                       display-field="name" />
+                        </v-select>
+                    <label>#{bundle.Name}:</label>
+                    <input required="true" v-model="o.ext.dependency.name" />
+                </div>
+            </v-fieldset>
+            <label>#{bundle.RemunerativeLevel}:</label>
+            <v-select required="required" v-model="o.remunerativeLevelId" >
+                <option>#{bundle.SelectOneMessage}</option>
+                <v-options url="/admin/rh/payroll/api/remunerative-level/0/0"
+                           value-field="id"     display-field="name" />
+            </v-select>
+            <v-fieldset legend="#{bundle.Position}" class="v-form">
+                <v-select v-model="o.positionId" required="required" v-bind:disabled="!!o.ext.position" >
+                    <option value="0">#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/rh/api/position/0/0" value-field="id" display-field="name"/>
+                </v-select>
+                <div class="right">
+                    <v-button icon="fa-plus" style="margin-top:10px" value="#{'Nuevo'} #{bundle.Position}" v-bind:disabled="!!o.ext.position" v-on:click.prevent="o.ext.position={}"/>
+                    <v-button icon="fa-minus" v-bind:disabled="!o.ext.position" style="margin-top:10px"
+                              v-on:click.prevent="o.ext.position=null"/>
+                </div>
+                <div class="v-panel v-form" v-if="o.ext.position">
+                    <label>#{bundle.Name}:</label>
+                    <input required="true" v-model="o.ext.position.name" />
+                </div>
+            </v-fieldset>
+            <v-fieldset legend="#{bundle.Jurisdiction}" class="v-form" closable="true"> 
+                <label>#{bundle.Region}:</label>
+                <v-select v-model="o.ext.idDpto" v-on:input="$refs.provinceSelect.load({regionId:o.ext.idDpto});">
+                    <option>#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/directory/api/region/0/0"
+                               value-field="pk.idDpto" display-field="name" />
+                </v-select>
+                <label>#{bundle.Provincia}:</label>
+                <v-select ref="provinceSelect" v-model="o.ext.idProv" v-on:input="$refs.districtSelect?$refs.districtSelect.load({idDpto:o.ext.idDpto,idProv:o.ext.idProv}):0;" 
+                          v-bind:disabled="!o.ext.idDpto" >
+                    <option>#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/directory/api/province/0/0"
+                               value-field="pk.idProv" display-field="name" />
+                </v-select>
+                <template v-show="o.ext.idProv">
+                    <label>#{bundle.Distrito}:</label>
+                    <v-select v-model="o.ext.jurisdiction" v-bind:disabled="!o.ext.idProv">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options ref="districtSelect" url="/admin/directory/api/district/0/0"
+                                   value-field="code" display-field="name" />
+                    </v-select>
+                </template>
+            </v-fieldset>
+            <div class="v-form">
+                <v-fieldset legend="#{bundle.Document}" class="v-form">
+                    <v-textarea rows="1" v-model="o.document"></v-textarea>
+                    <div style="margin-top: 10px" class="right">
+                        <a style="color: yellow;float: left;text-decoration: underline;padding: 5px;" v-if="o.file" href="#">VER</a>
+                        <v-uploader v-on:input="upload" />
+                    </div>
+                </v-fieldset >
+                <label>#{bundle.Charge}:</label>
+                <v-switch id="charge" v-model="o.charge" /> 
+                <label>#{bundle.Active}:</label>
+                <v-switch required="true" id="active" v-model="o.active" /> 
+                <label>#{bundle.FechaIni}:</label>
+                <v-calendar required="true" id="fechaIni" v-model="o.fechaIni" pattern="dd/MM/yyyy" />
+                <label>#{bundle.FechaFin}:</label>
+                <v-calendar id="fechaFin" v-model="o.fechaFin" pattern="dd/MM/yyyy" />
+            </div>
+            <v-fieldset closable="true" legend="Cuenta de Usuario" class="v-form">
+                <template v-if="!o.ext.hasAccount">
+                    <label>#{bundle.Create}:</label>
+                    <v-switch v-model="o.ext.createAccount"/>
+                </template>
+                <template v-if="o.ext.hasAccount||o.ext.createAccount">
+                    <label>#{bundle.Active}:</label>
+                    <v-switch required="true" v-model="o.ext.status" /> 
+                    <label>#{bundle.Pass}:</label>
+                    <input type="password" v-model="o.ext.pass"/>
+                    <label>#{bundle.Confirm}:</label>
+                    <input type="password" v-model="o.ext.confirm"/> 
+                    <div v-show="o.ext.pass#{bundle.AND}o.ext.pass!=o.ext.confirm" class="red">Confirmar no es igual a contraseña</div>
+                </template>
+            </v-fieldset>
+        </div>
+        <center>
+            <v-button icon="fa-save" value="#{bundle.Save}" v-on:click.prevent="save"/>
+            <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        _.ui({
+            data(){return {oldPeople:{},company:null,oldCompany:{},o: {
+                        active:true,charge:false,
+                      
+                        ext: {dependency:null,idDpto:null,idProv:null,position:null,editPeople:0,editCompany:0},people:null}};},
+            prop:['id','employee'],
+            mounted() {
+                var me = this,id=me.id,employee=me.employee;
+                if (id > 0)
+                    axios.get('/admin/rh/api/contract/' + id).then(function (r) {
+                        if (!r.data.ext)r.data.ext = {idDpto:null,idProv:null};
+                        me.o=r.data;
+                        me.$forceUpdate();
+                    });
+                else if(employee)
+                    axios.get('/admin/rh/api/employee/' + employee).then(function (r) {
+                        me.o.people=r.data.people;
+                        me.o.company=r.data.company;
+                    });
+            },
+            methods:{
+                process(o){
+                    if(o.people){
+                        if(o.people.id)
+                            o.people={id:o.people.id};
+                        else{
+                            o.people.idUbgNac=0;
+                            o.people.idUbgPro=0;
+                        }
+                    }
+                    if(o.dependency)delete o.dependency.fullName;
+                    if(o.company){
+                        o.company={id:o.company.id};
+                    }
+                    return o;
+                }
+            }
+        })
+    </script>
+</html>

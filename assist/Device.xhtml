@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form header="#{NODE_TITLE}" action="/admin/rh/assist" id="ss">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 ref="table"
+                 rowKey="id"
+                 v-on:row-select="o.user=$event.current"
+                 v-bind:pagination="50"
+                 v-bind:value="data" >
+            <template v-slot:header="">
+                <v-select v-model="o.device" style="display: inline-block;width: 150px;">
+                    <option value="1">172.16.1.171</option>
+                    <option value="2">172.16.1.172</option>
+                </v-select>
+                <v-button icon="fa-pen" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount" value="#{bundle.Edit}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+            </template>    
+            <template v-slot="{row,index}">
+                <td width="28" class="center" header="#"  t="s">
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="80" header="#{bundle.EnrollNumber}" sort="enrollNumber" class="center">
+                    {{row.enrollNumber}}
+                </td>
+                <td width="250" sort="fullName" header="#{bundle.FullName}" >
+                    {{row.fullName}}
+                </td>
+                <td width="80" class="center" header="#{bundle.Date}" t="s">
+                    {{row.date|date('dMY')}}
+                </td>
+                <td width="80" class="center" header="Ingreso" t="s" >
+                    {{row.time|date('time a')}}
+                </td>
+                <td width="80" class="right" v-bind:class="{red:row.tardanza>20}" header="Tardanza" >
+                    {{row.tardanza}}
+                </td>
+                <td width="80" class="center" header="Refrigerio" t="s" >
+                    {{row.refrigerio|date('time a')}}
+                </td>
+                <td width="80" class="center" header="Salida" t="s" >
+                    {{row.salida|date('time a')}}
+                </td>
+            </template>
+        </v-table>
+        <v-panel ref="dlg" style="display: none" header="Editar Usuario">
+            <div class="v-form v-panel">
+                <label>Usuario:</label>
+                <div v-if="o.user">{{o.user.enrollNumber}}: {{o.user.fullName}}</div>
+                <label>Directorio:</label>
+                <v-autocomplete placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                                minQueryLength="3" required="required"
+                                floating="true"
+                                v-bind:disabled="o.people#{bundle.AND}!o.people.id"
+                                v-model="o.people" src="/admin/directory/api/people"
+                                label="fullName">
+                    <template v-slot="{row}">
+                        <table class="transparent">
+                            <tr>
+                                <td style="width:50px;padding:0px" align="center" >
+                                    <img style="width:100%;max-height: 250px"
+                                         v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                    </img>
+                                </td>
+                                <td>
+                                    <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                        {{row.fullName}}
+                                        <div v-bind:style="'color:'+ row.numeroPndid?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </template>
+                </v-autocomplete>
+                <center>
+                    <v-button icon="fa-save" v-bind:disabled="!o.people" value="#{bundle.Save}" v-on:click.prevent="save"/>
+                    <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+                </center>
+            </div>
+        </v-panel>
+    </v-form>
+    <script>
+        _.ui({
+            el:'#ss',
+            methods: {
+                refresh(){
+                    var me=this;
+                    axios.get('/api/zk/' + me.o.device).then((e)=>{
+                        axios.get('/api/zk/' + me.o.device+'/users').then((e)=>{
+                            var d=e.data,m={};
+                            for(var i=0;d.length>i;i++){
+                                m[d[i].enrollNumber]=d[i];
+                            }
+                            d=me.data;
+                            for(var i=0;d.length>i;i++){
+                                var p=m[d[i].enrollNumber];
+                                d[i].fullName=p.name;
+                            }
+                            me.$refs.table.kc++;
+                        });
+                        me.data=e.data;
+                    });
+                },
+                edit(){
+                    var me=this;
+                    me.open(me.$refs.dlg);
+                },
+                save(){
+                    var me=this,o=this.o;
+                    axios.post('/admin/rh/api/attendance/user',{enrollNumber:o.user.enrollNumber,peopleId:o.people.id}).then(r => {
+                        o.user.code=o.people.code;
+                        o.user.peopleId=o.people.id;
+                        me.close(me.$refs.dlg);
+                        me.$refs.table.kc++;
+                    });
+                }
+                syncDevice(){
+                    var me = this;
+                    axios.post('/zk/sync-attendance',{from:null,to:new Date()}).then((e)=>{
+                        console.log(e);
+                    });
+                },
+                download(){
+                    var e=document.querySelector('.ui-datatable-scrollable-body .v-table');
+                    let ws =  XLSX.utils.table_to_sheet(e, { dateNF: "dd/mm/yyyy" });
+                    let wb  = { Sheets: { 'Libro Compras SUNAT': ws }, SheetNames: ['Libro Compras SUNAT'] }; 
+                    const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+                    const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+                    const EXCEL_EXTENSION = '.xlsx';
+                    const data= new Blob([excelBuffer], {type: EXCEL_TYPE});
+                    console.log(saveAs);
+                    saveAs(data, "sensey"+ EXCEL_EXTENSION);
+                }
+            },
+            data() {
+                return {o: {device:1,user:null,people:null},data:[],dialog:null};
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.14.1/xlsx.full.min.js"></script>
+</html>

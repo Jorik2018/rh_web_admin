@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition template="/template.xhtml">
+        <ui:param name="NODE_TITLE" value="#{bundle.Licences}" />
+        <ui:define name="body">
+            <c:set value="#{systemController.access('ADMIN_RH_PERLICENCIA')}" var="ADMIN_RH_PERLICENCIA"/>
+            <h:form id="PerLicenciaList">
+                <p:panel header="#{NODE_TITLE}">
+                    <p:dataTable id="datalist" value="#{perLicenciaController.dataModel}" var="item"
+                                 selection="#{perLicenciaController.selectedList}"
+                                 paginator="true"
+                                 rowIndexVar="riv"
+                                 rowKey="#{item.id}"
+                                 rows="50"
+                                 rowsPerPageTemplate="50,100,150,200"
+                                 scrollable="true"
+                                 lazy="true"
+                                 >
+
+                        <f:facet name="header">
+                            <p:commandButton id="createButton" rendered="#{ADMIN_RH_PERLICENCIA}" icon="ui-icon-plus" styleClass="on" value="#{bundle.Create}" actionListener="#{viewParam.x(perLicenciaController.prepareCreate()).include('/study/Create.xhtml').update('PerLicenciaCreate').set('UPDATE','PerLicenciaList')}" oncomplete="_.o('PerLicenciaCreate',args)"/>
+                            <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" actionListener="#{viewParam.include('/rh/license/View.xhtml').update('PerLicenciaView')}" oncomplete="_.o('PerLicenciaView',args)" />
+                            <p:commandButton id="editButton" rendered="#{ADMIN_RH_PERLICENCIA}" icon="ui-icon-pencil" value="#{bundle.Edit}" actionListener="#{viewParam.include('/study/Create.xhtml').update('PerLicenciaCreate').set('UPDATE','PerLicenciaList')}" oncomplete="_.o('PerLicenciaCreate',args)" />
+                            <p:commandButton id="deleteButton" rendered="#{ADMIN_RH_PERLICENCIA}" icon="ui-icon-trash" value="#{bundle.Delete}" actionListener="#{perLicenciaController.destroy}" update=":growl,datalist" />
+                            <p:commandButton id="reportButton" rendered="#{ADMIN_RH_PERLICENCIA}" icon="ui-icon-gear" value="#{bundle.Generate} #{bundle.Report}" actionListener="#{viewParam.x(sessionController.pp.put('peopleId',perLicenciaController.selected.worker.code)).x(sessionController.pp.put('PEOPLE',perLicenciaController.selected.worker))}" update=":Export" oncomplete="_.o('Export',args)" />
+                        </f:facet>
+                        <p:column selectionMode="multiple"  styleClass="checked-column"/>
+                        <p:column class="center" width="42" >
+                            <f:facet name="header">
+                                <h:outputText value="#"/>
+                            </f:facet>
+                            <h:outputText value="#{riv+1}" title="#{item.id}">
+                                <f:convertNumber pattern="000" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="220" filterBy="#{sessionController.pp['license:people']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['license:people']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Worker}"/>
+                            </f:facet>
+                            <h:outputText title="#{item.worker.id}" value="#{item.worker}"/>
+                        </p:column>
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['fecSoli']}">
+                            <f:facet name="filter" >
+                                <p:inputText type="hidden" id="fecSoli"  class="x-date-filter"  value="#{sessionController.pp['fecSoli']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Fecha} #{bundle.Request}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.fecSoli}">
+                                <f:convertDateTime pattern="dd/MM/yyyy"/>
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="60" styleClass="center" filterBy="#{sessionController.pp['horaSoli']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['horaSoli']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Hora} #{bundle.Request}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.horaSoli}"/>
+                        </p:column>
+                        <p:column width="200" filterBy="#{sessionController.pp['nroSoli']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['nroSoli']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Document}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.nroSoli}"/>
+                        </p:column>
+                        <p:column width="60" styleClass="center" filterBy="#{sessionController.pp['tipoSoli']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['tipoSoli']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Type} #{bundle.Request}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.tipoSoli}"/>
+                        </p:column>
+                        <p:column width="60" styleClass="center" filterBy="#{sessionController.pp['estaSoli']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['estaSoli']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Status} #{bundle.Request}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.estaSoli}"/>
+                        </p:column>
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['fecIni']}">
+                            <f:facet name="filter" >
+                                <p:inputText type="hidden" id="fecIni"  class="x-date-filter"  value="#{sessionController.pp['fecIni']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Start}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.fecIni}">
+                                <f:convertDateTime pattern="dd/MM/yyyy"  />
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['fecFin']}">
+                            <f:facet name="filter" >
+                                <p:inputText type="hidden" id="fecFin"  class="x-date-filter"  value="#{sessionController.pp['fecFin']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.End}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.fecFin}">
+                                <f:convertDateTime pattern="dd/MM/yyyy"  />
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="200" filterBy="#{sessionController.pp['detalle']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['detalle']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Detalle}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.codMovi}: #{item.detalle}"/>
+                        </p:column>
+                        <p:column/>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+            <p:dialog id="Export" header="Generar Reporte" 
+                      rendered="#{viewParam.set('',sessionController.pp.putIfAbsent('TITLE_REPORT','REPORTE DE CARTAS FIANZAS'))!=null}">
+                <h:form id="ExportForm">
+                    <h:panelGroup id="display">
+                        <style>
+                            .gra .ui-form-layout .ui-grid-row{
+                                border-bottom: 1px solid #bfbebe;
+                            }
+                        </style>
+
+                        <p:panelGrid  columns="2" layout="grid" styleClass="ui-form-layout gra">
+                            <p:outputLabel for="order" value="Tipo:" />
+                            <p:selectOneRadio id="order" styleClass="xs"  style="width: 100%"  columns="1" layout="grid" value="#{sessionController.pp['option']}">
+                                <f:selectItem itemLabel="Reporte de Asistencia de Personal" itemValue="0" />
+                                <f:selectItem itemLabel="Reporte de Licencias de Personal" itemValue="1" />
+                            </p:selectOneRadio>
+                        </p:panelGrid>
+                            <p:fieldset legend="Considerar Periodo:">
+                                <p:panelGrid  columns="2" layout="grid" styleClass="ui-form-layout">
+                                    <p:outputLabel value="Desde:" for="from"/>
+                                    <p:calendar id="from" value="#{sessionController.pp['from']}" pattern="dd/MM/yyyy" showOn="button"/>
+                                    <p:outputLabel value="Hasta:" for="to"/>
+                                    <p:calendar id="to" value="#{sessionController.pp['to']}"  pattern="dd/MM/yyyy" showOn="button"/>
+                                </p:panelGrid>
+                            </p:fieldset>
+                        <p:panelGrid  columns="2" layout="grid" styleClass="ui-form-layout gra">
+                            <p:outputLabel for="console" value="Formato de Salida:" />
+                            <p:selectOneRadio id="console" styleClass="xs"  style="width: 100%"  columns="1" layout="grid" value="#{sessionController.pp['FORMAT']}">
+                                <f:selectItem itemLabel="Documento de Formato Portable (pdf)" itemValue="pdf" />
+                                <f:selectItem itemLabel="Hoja de Calculo Excel (xls)" itemValue="xls" />
+                            </p:selectOneRadio>
+                        </p:panelGrid>
+
+                        <center>
+
+                            <p:commandButton ajax="false" icon="ui-icon-arrowthick-1-s" value="#{bundle.Download}"  onclick="PrimeFaces.monitorDownload(_.mask, _.unmask)">
+                                <p:fileDownload  value="#{perLicenciaController.getContent(sessionController.clonePageMap())}"/>
+                            </p:commandButton>
+                            <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                        </center>
+                    </h:panelGroup>
+                </h:form>
+            </p:dialog>
+        </ui:define>
+    </ui:composition>
+
+</html>

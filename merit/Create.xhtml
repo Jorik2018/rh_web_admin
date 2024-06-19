@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Merit}'">
+        <div class="v-form">
+            <label>#{bundle.Worker}</label>
+            <v-autocomplete placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                            minQueryLength="3"
+                            required="true"
+                            floating="true"
+                            v-on:input="peopleInput"
+                            v-model="o.employee" src="/admin/rh/api/employee"
+                            label="people.fullName">
+                <template v-slot="{row}">
+                    <table class="transparent" v-for="row in [row.people]">
+                        <tr>
+                            <td style="width:50px;padding:0px" align="center" >
+                                <img style="width:100%;max-height: 250px"
+                                     v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                </img>
+                            </td>
+                            <td>
+                                <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                    {{row.fullName}}
+                                    <div v-bind:style="'color:'+ row.code?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </template>
+            </v-autocomplete>
+            <label>#{bundle.Reason}:</label>
+            <v-textarea required="true" id="mencion" v-model="o.reason" title="#{bundle.Mencion}" />
+            <v-fieldset legend="#{bundle.Document}">
+                <input required="true" v-model="o.document"/>
+                <div style="margin-top: 10px" class="right">
+                    <a style="color: yellow;float: left;text-decoration: underline;padding: 5px;" v-if="o.file" href="#">VER</a>
+                    <v-uploader v-on:input="upload" />
+                </div>
+            </v-fieldset >
+            <label>#{bundle.Fecha}:</label>
+            <v-calendar required="true" id="fechaIni" v-model="o.fecha" title="#{bundle.Fecha}" pattern="dd/MM/yyyy" showOn="button"/>
+            <label>#{bundle.Observation}:</label>
+            <v-textarea id="observation" v-model="o.observation" title="#{bundle.Observation}" />
+        </div>
+        <center>
+            <v-button icon="fa-save" value="#{bundle.Save}" v-on:click.prevent="save"/>
+            <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        _.ui({
+            data() {
+                return {o: {employee:null}};
+            },
+            props:['id'],
+            created(){
+                var me=this;
+                me.$on('opened',(e)=>{
+                    axios.get('/admin/rh/api/employee/' + e.employee.id).then(function (r) {
+                        me.o.employee=r.data;
+                    });
+                });
+            },
+            mounted(){
+                var me=this;
+                if(me.id)
+                    axios.get('/admin/rh/api/merit/'+me.id).then((r)=>{
+                        me.o=r.data;
+                    });
+            },
+            methods:{
+                upload(){
+                    
+                }
+            }
+        });
+    </script>
+</html>

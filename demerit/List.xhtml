@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form id="EscDemeritoList" header="#{NODE_TITLE}" action="/admin/rh/demerit">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 pagination="50"
+                 src="/admin/rh/api/demerit" 
+                 rowKey="id"
+                 scrollable="true"
+                 >
+            <template v-slot:header="">
+                <v-button icon="fa-plus" v-if="can('ADMIN_RH_DEMERIT')" v-on:click.prevent="create" class="on" value="#{bundle.Create}"/>
+                <v-button icon="fa-pen" v-if="can('ADMIN_RH_DEMERIT')" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount" value="#{bundle.Edit}"/>
+                <v-button icon="fa-trash" v-if="can('ADMIN_RH_DEMERIT')" v-on:click.prevent="delete" v-bind:disabled="!rowSelectedCount" value="#{bundle.Delete}"/>
+                <v-button icon="fa-eye" v-on:click.prevent="view" v-bind:disabled="!rowSelectedCount" value="#{bundle.View}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+            </template>
+            <template v-slot="{row,index}">
+                <td class="center" width="28" header="#" v-bind:title="row.id">
+                    {{pad(index+1,2)}}
+                </td>
+                <td width="220" header="#{bundle.FullName}">
+                    <v-filter>
+                        <input v-model="filters.people" />
+                    </v-filter>
+                    {{row.employee.people.code}}: {{row.employee.people.fullName}}
+                </td>
+                <td width="200" header="#{bundle.Document}">
+                    <v-filter>
+                        <input v-model="filters.document" />
+                    </v-filter>
+                    {{row.document}}
+                </td>
+                <td width="350" header="#{bundle.Mencion}">
+                    <v-filter>
+                        <input v-model="filters.mencion" />
+                    </v-filter>
+                    {{row.mencion}}
+                </td>
+                <td width="80" class="right" header="#{bundle.DiasSancion}">
+                    <v-filter>
+                        <input v-model="filters.diasSancion" />
+                    </v-filter>
+                    {{row.diasSancion}}
+                </td>
+                <td width="80" class="center" header="#{bundle.FechaIni}">
+                    <v-filter>
+                        <input v-model="filters.fechaIni" />
+                    </v-filter>
+                    {{row.fechaIni|date}}
+                </td>
+                <td width="80" class="center" header="#{bundle.FechaFin}">
+                    <v-filter>
+                        <input v-model="filters.fechaFin" />
+                    </v-filter>
+                    {{row.fechaFin|date}}
+                </td>
+                <td width="80" class="center" header="#{bundle.FechaDem}">
+                    <v-filter>
+                        <input v-model="filters.fechaDem" />
+                    </v-filter>
+                    {{row.fechaDem|date}}
+                </td>
+                <td width="60" class="center" header="#{bundle.Activo}">
+                    <v-filter>
+                        <input v-model="filters.activo" />
+                    </v-filter>
+                    {{row.activo?'SI':'NO'}}
+                </td>
+                <td width="200" header="#{bundle.Observation}">
+                    <v-filter>
+                        <input v-model="filters.observation" />
+                    </v-filter>
+                    {{row.observation}}
+                </td>
+            </template>
+        </v-table>
+    </v-form>
+    <script>
+        _.ui({});
+    </script>
+</html>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition>
+        <c:set value="#{trainingController.selected}" var="o"/>
+        <p:dialog id="TrainingCreate" header="#{(empty o.id?bundle.Create:bundle.Edit)} #{bundle.Training}">
+            <h:form id="TrainingCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="1" rendered="#{o != null}" styleClass="ui-form-layout" layout="grid">
+
+                        <p:fieldset legend="#{bundle.Entity}">
+
+                            <p:outputLabel value="#{bundle.Search}:" for="company" />
+
+                            <p:commandButton icon="ui-icon-plus" style="margin-top:10px" value="Nueva #{bundle.Entity}" update="@parent"
+                                             immediate="true" 
+                                             process="@this" actionListener="#{o.ext.put('company',companyController.prepareCreate())}"/>
+                            <p:outputPanel rendered="#{not empty o.ext['company']}">
+                                <c:set value="#{o.ext['company']}" var="company"/>
+                                <p:outputLabel value="#{bundle.Ruc}:" for="ruc" />
+                                <p:inputText id="ruc" value="#{company.ruc}" />
+                                <p:outputLabel value="#{bundle.BusinessName}:" for="businessName" />
+                                <p:inputTextarea required="true" rows="2" id="businessName" value="#{company.businessName}" />
+                            </p:outputPanel>
+                        </p:fieldset>
+                        
+                        
+                        <p:outputLabel value="#{bundle.Condition}:" for="condition" />
+                        <p:selectOneMenu id="condition" styleClass="required" required="true" value="#{o.condition}" >
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems  value="#{trainingConditionController.getItems(viewParam.p)}"
+                                            var="i" itemValue="#{i}" itemLabel="#{i.name}" />
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.Type}:" for="type" />
+                        <p:selectOneMenu id="type" styleClass="required" required="true" value="#{o.type}" >
+                            <f:selectItem itemLabel="#{bundle.SelectOneMessage}"/>
+                            <f:selectItems  value="#{trainingTypeController.getItems(viewParam.p)}"
+                                            var="i" itemValue="#{i}" itemLabel="#{i.name}" />
+                        </p:selectOneMenu>
+                        <p:outputLabel value="#{bundle.Denomination}:" for="denomination" />
+                        <p:inputTextarea required="true" id="denomination" value="#{o.denomination}" title="#{bundle.Denomination}" />
+                        <p:outputLabel value="#{bundle.Hour}s:" for="hours" />
+                        <p:inputText id="hours" value="#{o.hours}" title="#{bundle.Hour}s" />
+                        <p:outputLabel value="#{bundle.FechaIni}:" for="fechaIni" />
+                        <p:calendar required="true" id="fechaIni" value="#{o.fechaIni}" title="#{bundle.FechaIni}" pattern="dd/MM/yyyy" showOn="button"/>
+                        <p:outputLabel value="#{bundle.FechaFin}:" for="fechaFin" />
+                        <p:calendar required="true" id="fechaFin" value="#{o.fechaFin}" title="#{bundle.FechaFin}" pattern="dd/MM/yyyy" showOn="button"/>
+                    </p:panelGrid>
+                    <center>
+                        <p:commandButton icon="ui-icon-disk" actionListener="#{trainingController.create}" value="#{bundle.Save}" update="display,:growl" oncomplete="return _.c(this,args)"/>
+                        <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                    </center>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

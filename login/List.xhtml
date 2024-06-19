@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form header="#{NODE_TITLE}" action="/admin/metas/api/task/first-login">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 v-bind:pagination="20"
+                 src="/admin/seguimientometa/api/task/first-login" >
+            <template v-slot:header="">
+                <v-button value="#{bundle.Create}" icon="fa-plus" v-if="can('CREATE_RH_SESSION')||can('ADMIN_RH_SESSION')" class="on" v-on:click.prevent="create"/>
+                <v-button value="#{bundle.Edit}" icon="fa-pen" v-if="can('ADMIN_RH_SESSION')" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount"/>
+                <v-button value="#{bundle.Delete}" icon="fa-trash" v-if="can('ADMIN_RH_SESSION')" v-on:click.prevent="destroy" v-bind:disabled="!rowSelectedCount"/>
+                <v-button value="#{bundle.Download}" icon="fa-download" v-on:click.prevent="downloadDlg"/>
+                <v-button title="#{bundle.Refresh}" icon="fa-sync" class="on" v-on:click.prevent="refresh"/>
+            </template>
+            <template v-slot:default="{row}">
+                <td width="100" v-bind:title="_.toDate(row.accessDate,'dMY')+'; '+row.id" class="center" label="#{'Fecha Acceso'}">
+                    <v-filter>
+                        <input v-model="filters.accessDate"/>
+                    </v-filter>
+                    {{row.accessDate|date('dMY')}}
+                </td>
+                <td width="80" class="center" label="#{bundle.DNI}">
+                    <v-filter>
+                        <input class="center" v-model="filters.people_code"/>
+                    </v-filter>
+                    {{row.ext[1]}}
+                </td>
+                <td width="250" label="#{bundle.FullName}" v-bind:title="'PEOPLE='+row.peopleId">
+                    <v-filter>
+                        <input v-model="filters.people"/>
+                    </v-filter>
+                    {{row.ext[2]}}
+                </td>
+                <td width="250" label="#{bundle.Dependency}">
+                    <v-filter>
+                        <input v-model="filters.dependency"/>
+                    </v-filter>
+                    {{row.ext[4]}}
+                </td>
+                <td width="250" label="#{bundle.Position}">
+                    <v-filter>
+                        <input v-model="filters.position"/>
+                    </v-filter>
+                    {{row.ext[6]}}
+                </td>
+                <td width="100" v-bind:title="_.toDate(row.loginTime)" class="center" label="#{'Hora Inicio'}">
+                    <v-filter>
+                        <input v-model="filters.loginTime"/>
+                    </v-filter>
+                    {{row.loginTime|date('time a')}}
+                </td>
+                <td width="100" class="center" label="#{'Hora Termino'}">
+                    <v-filter>
+                        <input v-model="filters.logoutTime"/>
+                    </v-filter>
+                    {{row.logoutTime|date('time a')}}
+                </td>
+            </template>
+        </v-table>
+        <v-panel ref="dlg" header="Descargar Reporte" style="display: none;">
+            <div class="v-form v-panel">
+                <label>Desde:</label>
+                <v-calendar v-model="o.from"/>
+                <label>Hasta:</label>
+                <v-calendar v-model="o.to"/>
+                <label>Formato de archivo:</label>
+                <v-radio-group v-model="o.format">
+                    <v-radio value="pdf" label="PDF"/>
+                    <v-radio value="xls" label="Hoja de Calculo"/>
+                </v-radio-group>
+                <center>
+                   <v-button icon="fa-download" value="#{bundle.Download}" v-on:click="download2"/>
+                   <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="closeDlg"/>
+                </center>
+            </div>
+        </v-panel>
+    </v-form>
+    <script>
+        _.ui({
+            data(){
+                var d=new Date();
+                var firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+                return {
+                    o:{format:'pdf',from:firstDay.getTime(),to:d.getTime()},
+                    dialog:null
+                };
+            },
+            methods: {
+                downloadDlg() {
+                    this.open(this.$refs.dlg);
+                },
+                download2() {
+                    var me=this,o=JSON.clone(me.o);
+                    if(me.rowSelectedCount)o.people=me.getSelected()[0].ext[1];
+                    me.saveAs("/admin/seguimientometa/api/task/download",o);
+                },
+                date(s){
+                    return _.date(s);
+                }
+            }
+        });
+    </script>
+</html>

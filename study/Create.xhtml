@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns:v-for="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-if="htt//xmlns.jcp.org/jsf/passthrough">
+    <v-form id="StudyForm" 
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Study}'"
+            action="/admin/rh/api/study">
+        <div class="v-form">
+            <label>#{bundle.Worker}:</label>
+            <v-autocomplete placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                            minQueryLength="3"
+                            required="true"
+                            floating="true"
+                            v-on:input="peopleInput"
+                            v-model="o.people" src="/admin/directory/api/people"
+                            label="fullName">
+                <template v-slot="{row}">
+                    <table class="transparent">
+                        <tr>
+                            <td style="width:50px;padding:0px" align="center" >
+                                <img style="width:100%;max-height: 250px"
+                                     v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                </img>
+                            </td>
+                            <td>
+                                <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                    {{row.fullName}}
+                                    <div v-bind:style="'color:'+ row.code?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </template>
+            </v-autocomplete>
+            <label>#{bundle.Type}:</label>
+            <v-select class="required" v-model="o.typeId" required="true" >
+                <option>#{bundle.SelectOneMessage}</option>
+                <v-options url="/admin/rh/api/study/type"
+                           value-field="id" display-field="name" />
+            </v-select> 
+            <label>#{bundle.Entity}:</label>
+            <v-autocomplete v-if="!(o.entity&amp;&amp;!o.entity.id)" queryEvent="enter" placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                            minQueryLength="3" id="entity" 
+                            v-bind:disabled="o.entity#{bundle.AND}!o.entity.id"
+                            emptyMessage="Buscar por nombre (2 caracteres min.)" 
+                            required="required" 
+                            v-model="o.entity" src="/admin/directory/api/company"
+                            label="businessName">
+                <template v-slot="{row}">
+                    <table class="transparent">
+                        <tr>
+                            <td style="width:50px; max-width: 50px" align="center" >
+                                <img id="foto" class="white" style="  width:100%;max-height: 60px"
+                                     v-bind:src="'/thumb/100/foto/'+row.id+'.jpg'" >
+                                </img>
+                            </td>
+                            <td>
+                                <a v-bind:href="'/admin/directorio/'+row.id" onclick="return _.o(this)" class="ui-link">
+                                    {{row.businessName}}
+                                    <br/>RUC: {{row.ruc}}
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </template>
+            </v-autocomplete>
+            <div class="right">
+                <v-button icon="fa-plus" v-bind:disabled="!!o.entity" style="margin-top:10px" value="Nueva #{bundle.Entity}" 
+                          v-on:click="o.entity={}"/>
+                <v-button icon="fa-minus" v-bind:disabled="!o.entity" style="margin-top:10px"
+                          v-on:click.prevent="o.entity=null"/>
+            </div>
+            <v-fieldset v-if="o.entity&amp;&amp;!o.entity.id" class="v-form">
+                <label>#{bundle.Ruc}:</label>
+                <input required="true" v-model="o.entity.ruc" />
+                <label>#{bundle.BusinessName}:</label>
+                <v-textarea required="true" rows="2" id="businessName" v-model="o.entity.businessName" />
+            </v-fieldset>
+            <label>#{bundle.Career}:</label>
+            <input v-model="o.career" required="true"/>
+            <label>#{bundle.Fecha} Termino:</label>
+            <v-calendar v-model="o.date" required="true"/>
+            <label>Numero Colegiatura:</label>
+            <input v-model="#{o.code}"  />
+            <a v-if="o.tempFile" v-bind:href="'/fs/temp/'+o.tempFile">DESCARGAR</a>
+            <div class="right margin-t">
+                <v-uploader v-on:input="upload"/>
+            </div>
+        </div>
+        <center>
+            <v-button icon="fa-save" value="#{bundle.Save}" v-on:click.prevent="save"/>
+            <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        _.ui({
+            data() {
+                return {o: {entity:null,tempFile:null,people:null}};
+            },
+            props: ['id'],
+            created(){
+                var me=this;
+                me.$on('opened',(e)=>{
+                    axios.get('/admin/directory/api/people/' + e.employee.peopleId).then(function (r) {
+                        me.o.people=r.data;
+                    });
+                });
+            },
+            mounted() {
+                var me = this, id = me.id;
+                if (id > 0)
+                    axios.get('/admin/rh/api/study/' + id).then(function (r) {
+                        var o=r.data;
+                        me.o = o;
+                    });
+            },
+            methods:{
+                upload(e){
+                    this.o.tempFile=e.tempFile;
+                }
+            }
+        });
+    </script>
+</html>

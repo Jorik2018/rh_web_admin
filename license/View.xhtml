@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <c:set value="#{perlicenciaController.selected}" var="o"/>
+        <p:dialog id="PerLicenciaView" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.ViewWarrantTitle}">
+            <h:form id="PerLicenciaViewForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{o != null}">
+                        <h:outputText value="#{bundle.Id}"/>
+                        <h:outputText value="#{o.id}" title="#{bundle.Id}"/>
+                        <h:outputText value="#{bundle.Plaza}"/>
+                        <h:outputText value="#{o.plaza}" title="#{bundle.Plaza}"/>
+                        <h:outputText value="#{bundle.TrabajadorId}"/>
+                        <h:outputText value="#{o.trabajadorId}" title="#{bundle.TrabajadorId}"/>
+                        <h:outputText value="#{bundle.FecSoli}"/>
+                        <h:outputText value="#{o.fecSoli}" title="#{bundle.FecSoli}"/>
+                        <h:outputText value="#{bundle.NroSoli}"/>
+                        <h:outputText value="#{o.nroSoli}" title="#{bundle.NroSoli}"/>
+                        <h:outputText value="#{bundle.TipoSoli}"/>
+                        <h:outputText value="#{o.tipoSoli}" title="#{bundle.TipoSoli}"/>
+                        <h:outputText value="#{bundle.EstaSoli}"/>
+                        <h:outputText value="#{o.estaSoli}" title="#{bundle.EstaSoli}"/>
+                        <h:outputText value="#{bundle.HoraSoli}"/>
+                        <h:outputText value="#{o.horaSoli}" title="#{bundle.HoraSoli}"/>
+                        <h:outputText value="#{bundle.FecIni}"/>
+                        <h:outputText value="#{o.fecIni}" title="#{bundle.FecIni}"/>
+                        <h:outputText value="#{bundle.FecFin}"/>
+                        <h:outputText value="#{o.fecFin}" title="#{bundle.FecFin}"/>
+                        <h:outputText value="#{bundle.Detalle}"/>
+                        <h:outputText value="#{o.detalle}" title="#{bundle.Detalle}"/>
+                        <h:outputText value="#{bundle.CodMovi}"/>
+                        <h:outputText value="#{o.codMovi}" title="#{bundle.CodMovi}"/>
+                    </p:panelGrid>
+                    <center>
+                        <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                    </center>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

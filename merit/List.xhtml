@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form id="MeritList" header="#{NODE_TITLE}" action="/admin/rh/merit">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 pagination="50"
+                 src="/admin/rh/api/merit" 
+                 rowKey="id"
+                 scrollable="true"
+                 >
+            <template v-slot:header="">
+                <v-button id="createButton" v-if="can('ADMIN_RH_MERIT')" icon="fa-plus" class="on" value="#{bundle.Create}" v-on:click.prevent="create"/>
+                <v-button id="editButton" v-if="can('ADMIN_RH_MERIT')" icon="fa-pencil" value="#{bundle.Edit}" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount"/>
+                <v-button id="deleteButton" v-if="can('ADMIN_RH_MERIT')" icon="fa-trash"  value="#{bundle.Delete}" v-on:click.prevent="delete" v-bind:disabled="!rowSelectedCount" />
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+            </template>
+            <template v-slot="{row,index}">
+                <td class="center" width="28" header="#" v-bind:title="row.id">
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="200" header="#{bundle.Document}">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.document" />
+                    </v-filter>
+                    {{row.document}}
+                </td>
+                <td width="200" header="#{bundle.Mencion}">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.mencion" />
+                    </v-filter>
+                    {{row.mencion}}
+                </td>
+                <td width="80" class="center" header="#{bundle.FechaIni}">
+                    <v-filter>
+                        <input disabled="disabled" type="hidden" id="fechaIni"  class="x-date-filter"  v-model="filters.fechaIni" />
+                    </v-filter>
+                    {{row.fecha|date}}
+                </td>
+                <td width="80" class="center" header="#{bundle.FechaDem}">
+                    <v-filter>
+                        <input disabled="disabled" type="hidden" id="fechaDem"  class="x-date-filter"  v-model="filters.fechaDem" />
+                    </v-filter>
+                    {{row.fechaDem|date}}
+                </td>
+                <td width="60" class="center" header="#{bundle.Activo}">
+                    <v-filter>
+                        <input v-model="filters.activo" />
+                    </v-filter>
+                    {{row.activo?'SI':'NO'}}
+                </td>
+                <td width="200" header="#{bundle.Observation}">
+                    <v-filter>
+                        <input disabled="disabled" v-model="filters.observation" />
+                    </v-filter>
+                    {{row.observation}}
+                </td>
+            </template>
+        </v-table>
+    </v-form>
+    <script>
+        _.ui({});
+    </script>
+</html>

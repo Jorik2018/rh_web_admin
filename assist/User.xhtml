@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form header="#{NODE_TITLE}" action="/admin/rh/assist">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 ref="table"
+                 rowKey="id"
+                 v-on:row-select="o.user=$event.current"
+                 v-bind:value="data" >
+            <template v-slot:header="">
+                <v-select v-model="o.device" style="display: inline-block;width: 150px;">
+                    <option value="1">172.16.1.171</option>
+                    <option value="2">172.16.1.172</option>
+                </v-select>
+                <v-button icon="fa-pen" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount" value="#{bundle.Edit}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+            </template>    
+            <template v-slot="{row,index}">
+                <td header="#" width="28" class="center" t="s">
+                    {{pad(index+1,3)}}
+                </td>
+                <td header="#{bundle.EnrollNumber}" width="80" sort="enrollNumber" class="center">
+                    {{row.enrollNumber}}
+                </td>
+                <td header="#{bundle.DNI}" v-bind:class="{yellow:!row.code}" width="100" class="center" sort="code">
+                    {{row.code}}
+                </td>
+                <td header="#{bundle.FullName}" width="250" sort="name">
+                    {{row.name}}
+                </td>
+                <td header="Tardanza" width="80" class="right" v-bind:class="{red:row.tardanza>20}">
+                    {{row.status}}
+                </td>
+            </template>
+        </v-table>
+        <v-panel header="Editar Usuario" ref="dlg" style="display: none;">
+            <div class="v-form v-panel">
+                <label>Usuario:</label>
+                <div v-if="o.user">{{o.user.enrollNumber}}: {{o.user.name}}</div>
+                <label>Directorio:</label>
+                <v-autocomplete placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                                minQueryLength="3" required="required"
+                                floating="true"
+                                v-bind:disabled="o.people#{bundle.AND}!o.people.id"
+                                v-model="o.people" src="/admin/directory/api/people"
+                                label="fullName">
+                    <template v-slot="{row}">
+                        <table class="transparent">
+                            <tr>
+                                <td style="width:50px;padding:0px" align="center" >
+                                    <img style="width:100%;max-height: 250px"
+                                         v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                    </img>
+                                </td>
+                                <td>
+                                    <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                        {{row.fullName}}
+                                        <div v-bind:style="'color:'+ row.numeroPndid?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </template>
+                </v-autocomplete>
+                <center>
+                    <v-button icon="fa-save" vbinddisabled="!o.people" value="#{bundle.Save}" v-on:click.prevent="save"/>
+                    <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+                </center>
+            </div>
+        </v-panel>
+    </v-form>
+    <script>
+        _.ui({
+            methods: {
+                refresh() {
+                    var me = this;
+                    axios.get('/api/zk/' + me.o.device + '/users').then((e)=>{
+                        var d = e.data;
+                        var l = [],m={};
+                        for (var i = 0; d.length > i; i++){
+                            l.push(d[i].enrollNumber);
+                            m[d[i].enrollNumber]=d[i];
+                        }
+                        axios.post('/admin/rh/api/attendance/people', l).then((e)=>{
+                            var d2=e.data;
+                            for (var i = 0; d2.length > i; i++) {
+                                var p=d2[i],u=m[p.enrollNumber];
+                                u.code=p.code;
+                                if(!u.name)u.name=p.fullName;
+                            }
+                            me.$refs.table.kc++;
+                        });
+                        me.data = d;
+                        me.$refs.table.kc++;
+                    });
+                },
+                edit() {
+                    var me = this;
+                    me.o.people=null;
+                    me.open(me.$refs.dlg);
+                },
+                save(){
+                    var me=this,o=this.o;
+                    axios.post('/admin/rh/api/attendance/user',{enrollNumber:o.user.enrollNumber,peopleId:o.people.id}).then(r => {
+                        o.user.code=o.people.code;
+                        o.user.peopleId=o.people.id;
+                        o.user.name=o.people.fullName;
+                        me.close(me.$refs.dlg);
+                        me.$refs.table.kc++;
+                    });
+                }
+            },
+            data() {
+                return {o: {device: 1, user: null, people: null}, data: []};
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.14.1/xlsx.full.min.js"></script>
+
+</html>

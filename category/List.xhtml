@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition template="/template.xhtml">
+        <ui:param name="NODE_TITLE" value="#{bundle.PerCategoriaDocente}s" />
+        <ui:define name="body">
+            <c:set value="#{systemController.access('ADMIN_RH_PERCATEGORIADOCENTE')}" var="ADMIN_RH_PERCATEGORIADOCENTE"/>
+            <h:form id="PerCategoriaDocenteList">
+                <p:panel header="#{NODE_TITLE}">
+                    <p:dataTable id="datalist" value="#{perCategoriaDocenteController.dataModel}" var="item"
+                                 selection="#{perCategoriaDocenteController.selectedList}"
+                                 paginator="true"
+                                 rowIndexVar="riv"
+                                 rowKey="#{item.id}"
+                                 rows="50"
+                                 rowsPerPageTemplate="50,100,150,200"
+                                 scrollable="true"
+                                 lazy="true"
+                                 >
+
+                        <f:facet name="header">
+                            <p:commandButton id="createButton" rendered="#{ADMIN_RH_PERCATEGORIADOCENTE}" icon="ui-icon-plus" styleClass="on" value="#{bundle.Create}" actionListener="#{viewParam.x(perCategoriaDocenteController.prepareCreate()).include('/rh/percategoriadocente/Create.xhtml').update('PerCategoriaDocenteCreate').set('UPDATE','PerCategoriaDocenteList')}" oncomplete="_.o('PerCategoriaDocenteCreate',args)"/>
+                            <p:commandButton id="viewButton"   icon="ui-icon-search" value="#{bundle.View}" actionListener="#{viewParam.include('/rh/percategoriadocente/View.xhtml').update('PerCategoriaDocenteView')}" oncomplete="_.o('PerCategoriaDocenteView',args)" />
+                            <p:commandButton id="editButton" rendered="#{ADMIN_RH_PERCATEGORIADOCENTE}" icon="ui-icon-pencil" value="#{bundle.Edit}" actionListener="#{viewParam.include('/rh/percategoriadocente/Create.xhtml').update('PerCategoriaDocenteCreate').set('UPDATE','PerCategoriaDocenteList')}" oncomplete="_.o('PerCategoriaDocenteCreate',args)" />
+                            <p:commandButton id="deleteButton" rendered="#{ADMIN_RH_PERCATEGORIADOCENTE}" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{percategoriadocenteController.destroy}" update=":growl,datalist" />
+                        </f:facet>
+                        <p:column selectionMode="multiple"  styleClass="checked-column"/>
+
+                        <p:column class="center" width="28" >
+                            <f:facet name="header">
+                                <h:outputText value="#"/>
+                            </f:facet>
+                            <h:outputText value="#{riv+1}" title="#{item.id}">
+                                <f:convertNumber pattern="000" />
+                            </h:outputText>
+                        </p:column>
+                        <p:column width="80" class="right" filterBy="#{sessionController.pp['idCategoria']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['idCategoria']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.IdCategoria}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.idCategoria}"/>
+                        </p:column>
+                        <p:column width="200" filterBy="#{sessionController.pp['categoria']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['categoria']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Categoria}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.categoria}"/>
+                        </p:column>
+                        <p:column/>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+        </ui:define>
+    </ui:composition>
+
+</html>

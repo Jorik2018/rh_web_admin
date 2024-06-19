@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "htt//www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="htt//www.w3.org/1999/xhtml"
+      xmlns:v-for="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-if="htt//xmlns.jcp.org/jsf/passthrough">
+    <v-form v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.License}'"
+            action="/admin/rh/api/license">
+        <div class="v-form" rendered="#{o != null}">
+            <label>#{bundle.Worker}:</label>
+            <v-autocomplete placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                            minQueryLength="3"
+                            required="true"
+                            floating="true"
+                            v-on:input="peopleInput"
+                            v-model="o.worker" src="/admin/directory/api/people"
+                            label="fullName">
+                <template v-slot="{row}">
+                    <table class="transparent">
+                        <tr>
+                            <td style="width:50px;padding:0px" align="center" >
+                                <img style="width:100%;max-height: 250px"
+                                     v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                </img>
+                            </td>
+                            <td>
+                                <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                    {{row.fullName}}
+                                    <div v-bind:style="'color:'+ row.code?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </template>
+            </v-autocomplete>
+            <label>#{bundle.Type}:</label>
+            <v-select v-model="o.type" required="required">
+                <option value="P">Papeleta</option>
+                <option value="J">Justificación</option>
+                <option value="O">Onomastico</option>
+                <option value="V">Vacaciones</option>
+                <option value="LGH">Licencia con Goce de Haber</option>
+                <option value="LSG">Licencia sin Goce de Haber</option>
+                <option value="LS">Licencia Sindical</option>
+                <option value="LP">Licencia por Paternidad</option>
+                <option value="LF">Licencia por Fallecimiento</option>
+                <option value="LE">Licencia por Enfermedad</option>
+                <option value="LM">Licencia por Maternidad</option>
+                <option value="DM">Descanso Médico</option>
+                <option value="DMC">Descanso Médico COVID</option>
+                <option value="TR">Trabajo Remoto</option>
+                <option value="TM">Trabajo Mixto</option>
+                <option value="TP">Trabajo Presencial</option>
+                <option value="DHZ">Dia de Huaraz - Desfile</option>
+                <option value="PLM">Permiso por Lactancia Materna</option>
+            </v-select>
+            <label>#{bundle.Fecha} Solicitud:</label>
+            <v-calendar v-model="o.fecSoli" required="true" pattern="dd/MM/yyyy" showHour="true"/>
+            <v-fieldset legend="#{bundle.Document}">
+                <input id="nroSoli" v-model="o.nroSoli" maxlength="30" v-bind:required="o.type!='O'&amp;&amp;o.type!='P'"/>
+                <div style="margin-top: 10px" class="right">
+                    <a style="color: yellow;float: left;text-decoration: underline;padding: 5px;" v-if="o.file" href="#">VER</a>
+                    <v-uploader v-on:input="upload" />
+                </div>
+            </v-fieldset >
+            <template v-if="o.type=='P'">
+                <label>#{'Tipo Permiso'}:</label>
+                <v-select v-model="o.authorizationType" v-on:input="authorizationTypeInput" v-bind:required="o.type=='P'">
+                    <option value="">-- SELECCIONAR OPCION --</option>
+                    <option value="1">COMISION DE SERVICIOS</option>
+                    <option value="2">PARTICULAR</option>
+                    <option value="3">ENFERMEDAD</option>
+                    <option value="4">CAPACITACIONES</option>
+                    <option value="5">CITACION JUDICIAL</option>
+                    <option value="6">OTROS</option>
+                </v-select>
+                <label>Hora #{bundle.Start}:</label>
+                <v-calendar v-model="o.timeStartString" type="time" required="true" />
+                <label>Hora #{bundle.End}:</label>
+                <v-calendar v-model="o.timeEndString" type="time" required="true" />
+            </template>
+            <template v-if="o.type!='O'">
+                <label>Fecha #{bundle.Start}:</label>
+                <v-calendar v-model="o.fecIni" pattern="dd/MM/yyyy" required="true" />
+                <label>Fecha #{bundle.End}:</label>
+                <v-calendar v-model="o.fecFin" title="DAYS=#{o.days}" pattern="dd/MM/yyyy" required="true"/>
+            </template>
+            <label v-if="o.type=='V'">#{bundle.Period}:</label>
+            <v-select ref="period" v-show="o.type=='V'" v-bind:disabled="!o.worker" v-bind:autoload="false"
+                      v-model="o.codMovi" 
+                      v-bind:required="o.type=='V'" 
+                      >
+                <option>#{bundle.SelectOneMessage}</option>
+                <v-options value-field="0" v-bind:url="'/admin/rh/api/license/period/'+(o.worker?o.worker.id:0)">
+                    <template v-slot="{item}">
+                        {{item[1]}} - {{item[2]}}
+                    </template>
+                </v-options>
+            </v-select>
+            <template v-if="o.type!='V'">
+                <label>Detalle:</label>
+                <v-textarea v-model="o.detalle" rows="1"/>
+            </template>
+        </div>
+        <center>
+            <v-button icon="fa-save" value="#{bundle.Save}" v-on:click.prevent="save"/>
+            <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        _.ui({
+            props: ['id'],
+            data() {
+                return {o: {worker:null,type:'P',file:{}}};
+            },
+            created(){
+                var me=this;
+                me.$on('opened',(e)=>{
+                    if(me.o.employee)
+                    axios.get('/admin/directory/api/people/' + me.o.employee.peopleId).then(function (r) {
+                        me.o.worker=r.data;
+                    });
+                });
+            },
+            mounted() {
+                var me = this, id = me.id;
+                if (id > 0)
+                    axios.get('/admin/rh/api/license/' + id).then(function (r) {
+                        var o=r.data;
+                        me.o = o;
+                        me.peopleInput();
+                    });
+            },
+            methods:{
+                upload(o){
+                    this.o.file=o;
+                },
+                authorizationTypeInput(e,r){
+                    if(r.option)
+                        if(!this.o.id)
+                            this.o.detalle=r.option.textContent;
+                },
+                peopleInput(p){
+                    this.$refs.period.load();
+                },
+                process(o){
+                    if(o.type=='P'){
+                        if(!o.fecIni)o.fecIni=o.fecSoli;
+                        if(!o.fecIni)o.fecFin=o.fecSoli;
+                    }
+                    if(!o.detalle){
+                        o.detalle='';
+                    }
+                    if(!o.horaSoli){
+                        o.horaSoli=_.toDate(o.timeStart,'time a');
+                    }
+                    console.log('>'+o.timeStart);
+                    if(!isNaN(o.timeStartString))o.timeStartString=_.toDate(o.timeStartString,'time');
+                        delete o.timeStart;
+                    //}
+                    
+                    if(!isNaN(o.timeEndString))o.timeEndString=_.toDate(o.timeEndString,'time');
+                    console.log('-----'+o.timeEndString);
+                    delete o.timeEnd;
+                }
+            }
+        });
+    </script>
+</html>

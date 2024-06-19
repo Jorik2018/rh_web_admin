@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "htt//www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="htt//www.w3.org/1999/xhtml"
+      xmlns:v-for="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="htt//xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-if="htt//xmlns.jcp.org/jsf/passthrough">
+    <v-form action="/admin/rh/api/employee" 
+            v-bind:header="(o.id?'#{bundle.Edit}':'#{bundle.Create}')+' #{bundle.Employee}'">
+        <div>
+            <table width="100%" id="photo">
+                <tr>
+                    <td align="right">
+                        <div id="foto">
+                            <img v-if="!o.ext.src" class="shadow" style="width:160px;max-height: 210px"
+                                 v-bind:src="'/thumb/200/foto/'+o.peopleId+'.jpg'" >
+                            </img>
+                            <img v-if="o.ext.src" class="shadow" style="width:160px;max-height: 210px"
+                                 v-bind:src="o.ext.src.startsWith('data')?o.ext.src:('/fs/temp/'+o.ext.src)" >
+                            </img>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right" style="padding:8px 0px 4px 0px">
+                        <v-uploader icon="fa-image" v-on:input="changeImage" value="Seleccionar foto"/>
+                    </td>
+                </tr>
+            </table>
+            <v-fieldset v-if="!o.id" legend="#{'Búsqueda de Directorio'}" class="v-form">
+                <label>#{bundle.Search}:</label>
+                <v-autocomplete placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                                minQueryLength="3"
+                                v-on:input="peopleInput"
+                                v-model="people" src="/admin/directory/api/people"
+                                label="fullName">
+                    <template v-slot="{row}">
+                        <table class="transparent">
+                            <tr>
+                                <td style="width:50px;padding:0px" align="center" >
+                                    <img style="width:100%;max-height: 250px"
+                                         v-bind:src="'/thumb/160/foto/'+row.id+'.jpg'" >
+                                    </img>
+                                </td>
+                                <td>
+                                    <a v-bind:href="'/admin/directorio/'+row.id" onclick="return false" >
+                                        {{row.fullName}}
+                                        <div v-bind:style="'color:'+ row.code?'':'red'" v-bind:title="row.id">{{row.document.acronym}}: {{row.code}}</div>
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </template>
+                </v-autocomplete>
+                <div class="right">
+                    <v-button icon="fa-plus" style="margin-top:10px" value="Nueva Persona Natural" 
+                              v-on:click.prevent="o.people={document:{}};o.ext={peopleEdit:true};$forceUpdate()"/>
+                    <v-button icon="fa-minus" v-bind:disabled="!(o.people#{bundle.AND}!o.people.id)" style="margin-top:10px"
+                              v-on:click.prevent="o.people=null;$forceUpdate()"/>
+                </div>
+
+            </v-fieldset>
+            <div v-if="o.people">
+                <v-fieldset class="v-form" style="margin:20px 0px;padding-bottom: 18px" legend="#{bundle.Documento} #{bundle.Identidad}" > 
+                    <label>#{bundle.Tipo}:</label>
+                    <v-select styleClass="required" required="true" name="document-type" v-model="o.people.document" >
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options url="/admin/directory/api/document-type/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                    <label>#{bundle.Numero}:</label>
+                    <input type="tel" maxlength="12" class="center" required="true" v-model="o.people.code"  />
+                    <div class="right">
+                        <v-button icon="fa-search" v-bind:disabled="!o.people.code||o.people.code.length==0" style="margin-top:10px" value="Consulta RENIEC" 
+                              v-on:click.prevent="consultaRENIEC"/>
+                    </div>
+                </v-fieldset>
+                <v-fieldset legend="Información Personal" class="v-form">
+                    <div class="right">
+                        <span v-if="o.ext.peopleEdit" v-on:click="o.ext.peopleEdit=0" style="cursor:pointer;margin:0px 5px"><i class="fa fa-times"></i></span>
+                        <span v-if="!o.ext.peopleEdit" v-on:click="o.ext.peopleEdit=1" style="cursor:pointer;margin:0px 5px"><i class="fa fa-pen"></i></span></div>
+                    <label>#{bundle.Name}:</label>
+                    <input required="true" id="nombres" v-bind:readonly="!o.ext.peopleEdit" maxlength="80" v-model="o.people.names" />
+                    <label>#{bundle.ApPaterno}:</label>
+                    <input required="true" id="apPaterno" v-bind:readonly="!o.ext.peopleEdit" maxlength="50" v-model="o.people.apPaterno" />
+                    <label>#{bundle.ApMaterno}:</label>
+                    <input id="apMaterno" v-bind:readonly="!o.ext.peopleEdit" maxlength="50" v-model="o.people.apMaterno" />
+                    <label>#{bundle.Birthdate}:</label>
+                    <div v-if='!o.ext.peopleEdit'>
+                        <template v-if="o.people.birthdate">{{o.people.birthdate|date('dMY')}}</template>
+                        <template v-if="!o.people.birthdate">dd / mm / aaaa</template>
+                    </div>
+                    <v-calendar v-if='o.ext.peopleEdit' v-model="o.people.birthdate" v-bind:readonly="!o.ext.peopleEdit" />
+                    <label>#{bundle.Sex}:</label>
+                    <div v-if='!o.ext.peopleEdit'>{{o.people.sex=='M'?'MASCULINO':'FEMENINO'}}</div>
+                    <v-radio-group v-if='o.ext.peopleEdit' required="true" v-model="o.people.sex">
+                        <v-radio label="Masculino" value="M" />
+                        <v-radio label="Femenino" value="F" />
+                    </v-radio-group>
+                    <label>#{bundle.Mail}:</label>
+                    <input id="mail" v-model="o.people.mail" v-bind:readonly="!o.ext.peopleEdit" />
+                    <label>#{bundle.Phone}:</label>
+                    <input id="phone" v-model="o.people.phone" v-bind:readonly="!o.ext.peopleEdit" />
+                </v-fieldset>
+                <v-fieldset legend="#{bundle.OriginPlace}" class="v-form">
+                    <label>#{bundle.Region}:</label>
+                    <div v-if="!o.ext.peopleEdit">{{o.ext.regionName?o.ext.regionName:'----'}}</div>
+                    <v-select v-if="o.ext.peopleEdit" v-model="o.ext.region" storage="region0_selected" v-bind:required="true" v-on:input="$refs.province0.load({regionId:o.ext.region})">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options value-field="code" storage="region" url="/admin/directory/api/region/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                    <label>#{bundle.Province}:</label>
+                    <div v-if="!o.ext.peopleEdit">{{o.ext.provinceName?o.ext.provinceName:'----'}}</div>
+                    <v-select v-if="o.ext.peopleEdit" ref="province0" storage="province_selected" v-model="o.ext.province" v-bind:autoload="false" v-bind:disabled="!o.ext.region" v-bind:required="true" v-on:input="$refs.district0.load({provinceId:o.ext.province})">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options value-field="code" url="/admin/directory/api/province/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                    <label>#{bundle.District}:</label>
+                    <div v-if="!o.ext.peopleEdit">{{o.ext.districtName?o.ext.districtName:'----'}}</div>
+                    <v-select v-if="o.ext.peopleEdit" ref="district0" v-model="o.people.idUbgNac" v-bind:autoload="false" v-bind:disabled="!o.ext.province" v-bind:required="true">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options value-field="id" url="/admin/directory/api/district/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                </v-fieldset>
+                <v-fieldset legend="#{bundle.ResidencePlace}" class="v-form">
+                    <label>#{bundle.Region}:</label>
+                    <div v-if="!o.ext.peopleEdit">{{o.ext.regionName2?o.ext.regionName2:'----'}}</div>
+                    <v-select v-if="o.ext.peopleEdit" v-model="o.ext.region2" storage="region_selected" v-bind:required="true" v-on:input="$refs.province2.load({regionId:o.ext.region2})">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options value-field="code" storage="region" url="/admin/directory/api/region/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                    <label>#{bundle.Province}:</label>
+                    <div v-if="!o.ext.peopleEdit">{{o.ext.provinceName2}}</div>
+                    <v-select v-if="o.ext.peopleEdit" ref="province2" storage="province_selected" v-model="o.ext.province2" v-bind:autoload="false" v-bind:disabled="!o.ext.region2" v-bind:required="true" v-on:input="$refs.district2.load({provinceId:o.ext.province2})">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options value-field="code" url="/admin/directory/api/province/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                    <label>#{bundle.District}:</label>
+                    <div v-if="!o.ext.peopleEdit">{{o.ext.districtName2}}</div>
+                    <v-select v-if="o.ext.peopleEdit" ref="district2" v-model="o.people.idUbgPro" v-bind:autoload="false" v-bind:disabled="!o.ext.province2" v-bind:required="true">
+                        <option>#{bundle.SelectOneMessage}</option>
+                        <v-options value-field="id" url="/admin/directory/api/district/0/0">
+                            <template v-slot="{item}">
+                                {{item.name}}
+                            </template>
+                        </v-options>
+                    </v-select>
+                    <label>#{bundle.Address}:</label>
+                    <v-textarea v-bind:readonly="!o.ext.peopleEdit" v-model="o.people.address"/>
+                </v-fieldset>
+            </div>
+            <v-fieldset legend="#{bundle.Situacion} #{'Laboral'} #{'Actual'}" class="v-form">
+                <label>Fecha Ingreso:</label>
+                <v-calendar v-model="o.incomeDate"/>
+                <label>#{'Modalidad de Trabajo'}:</label>
+                <v-select v-model="o.workModality">
+                    <option>#{bundle.SelectOneMessage}</option>
+                    <option value="N">NO MARCA</option>
+                    <option value="P">PRESENCIAL</option>
+                    <option value="M">MIXTO</option>
+                    <option value="R">REMOTO</option>
+                    <option value="V">VIGILANCIA</option>
+                </v-select>
+                <label>#{bundle.RUC}:</label>
+                <input v-model="o.ruc" maxlength="30"/>
+                <label>#{bundle.Regimen} #{'Laboral'}:</label>
+                <v-select v-model="o.laborRegimeId" v-bind:required="true">
+                    <option>#{bundle.SelectOneMessage}</option>
+                    <v-options value-field="id" storage="region" url="/admin/rh/api/labor-regime/0/0">
+                        <template v-slot="{item}">
+                            {{item.name}}
+                        </template>
+                    </v-options>
+                </v-select>
+                <label>#{bundle.PensionSystem}:</label>
+                <v-select v-model="o.pensionSystem" >
+                    <option>#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/rh/payroll/api/pension-system/0/0"
+                               display-field="name" />
+                </v-select>
+                <label>CUSPP - Código Único del Sistema Privado de Pensiones:</label>
+                <input v-model="o.cuspp" maxlength="30"/>
+                <label>Numero Plaza:</label>
+                <v-number v-model="o.nPlaza" min="0" decimal="0"/>
+                <label>Nº Cta. Banco:</label>
+                <input v-model="o.nroBankAccount" maxlength="30"/>
+                <label>Autogenerado:</label>
+                <input v-model="o.autogenerado" maxlength="30"/>
+                <label>Estado:</label>
+                <v-select v-model="o.status" >
+                    <option>#{bundle.SelectOneMessage}</option>
+                    <v-options url="/admin/rh/api/employee/status"
+                               display-field="name" />
+                </v-select>
+                <label>Observaciones:</label>
+                <v-textarea v-model="o.observations" min="0" decimal="0"/>
+            </v-fieldset>
+        </div>
+        <center>
+            <v-button icon="fa-save" value="#{bundle.Save}" v-on:click.prevent="save"/>
+            <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+        </center>
+    </v-form>
+    <script>
+        _.ui({
+            data: {
+                people: null,
+                o: {
+                    people: null,
+                    ext: {peopleEdit: 0,src:null}
+                }
+            },
+            prop: ['id'],
+            mounted() {
+                var me = this, id = me.id;
+                if (id > 0)
+                    axios.get('/admin/rh/api/employee/' + id).then(function (r) {
+                        var o=r.data;
+                        o.ext.peopleEdit = 0;
+                        o.ext.src=null;
+                        me.o = o;
+                        me.$forceUpdate();
+                    });
+            },
+            methods: {
+                consultaRENIEC(){
+                    var me=this,p=me.o.people;
+                    axios.post('/api/reniec/',{"dni":p.code}).then(function (r) {
+                        var d=r.data.consultarResponse.return;
+                        if(d.coResultado=="0000"){
+                            d=d.datosPersona;
+                            p.apPaterno=d.apPrimer;
+                            p.apMaterno=d.apSegundo;
+                            p.names=d.prenombres;
+                            p.address=d.direccion+' '+d.ubigeo;
+                            me.o.ext.src='data:image/png;base64, '+d.foto;
+                            me.$forceUpdate();
+                        }else{
+                            alert(d.deResultado);
+                        }
+                    });
+                },
+                changeImage(o){
+                    this.o.ext.src=o.tempFile;
+                },
+                peopleInput(v) {
+                    this.o.people = v;
+                },
+                process(o) {
+                    if (o.pensionSystem) {
+                        o.pensionSystem = {id: o.pensionSystem.id};
+                    }
+                    if (!o.ext.peopleEdit)
+                        if (o.people) {
+                            if (o.people.id)
+                                o.people = {id: o.people.id};
+                        }
+                    if (o.dependency)
+                        delete o.dependency.fullName;
+                    if (o.company) {
+                        o.company = {id: o.company.id};
+                    }
+                    return o;
+                }
+            }
+        })
+    </script>
+</html>

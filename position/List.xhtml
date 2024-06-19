@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <link rel="stylesheet" href="/cdn/all.min.css"/>
+    <script src="/cdn/vue.js"></script>
+    <script src="/cdn/axios.min.js"></script>
+    <script src="/cdn/vue-ui.js?v=48"></script>
+    <c:set value="#{systemController.access('ADMIN_RH_POSITION')}" var="ADMIN_RH_POSITION"/>
+    <v-form header="#{NODE_TITLE}" action="/admin/seguimientometa/position">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 rowKey="id"
+                 v-bind:pagination="20"
+                 src="/admin/rh/api/position" >
+            <template v-slot:header="">
+                <v-button v-if="can('ADMIN')" icon="fa-plus" v-on:click.prevent="create" class="on" value="#{bundle.Create}"/>
+                <v-button v-if="can('ADMIN')" icon="fa-pen" v-on:click.prevent="edit" v-bind:disabled="rowSelectedCount==0" value="#{bundle.Edit}"/>
+                <v-button v-if="can('ADMIN')" icon="fa-trash" v-on:click.prevent="destroy" v-bind:disabled="rowSelectedCount==0" value="#{bundle.Delete}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+            </template>    
+            <template v-slot="{row,index}">
+                <td width="28" class="center" label="#" >
+                    {{index+1}}
+                </td>
+                <td width="200" label="#{bundle.Name}" >
+                    {{row.name}}
+                </td>
+                <td width="80" class="center" label="#{bundle.Level}">
+                    {{row.level}}
+                </td>
+            </template>
+        </v-table>
+    </v-form>
+    <script>
+_.ui({
+    methods: {
+        can(p){return this.perms[p]}
+    },
+    data: function () {
+        return{perms: {ADMIN: #{ADMIN_RH_POSITION}}}
+    }
+});
+    </script>
+</html>

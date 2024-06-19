@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <v-form id="PerLicenciaList" header="#{NODE_TITLE}">
+        <v-table 
+            v-bind:selectable="true"
+            v-bind:scrollable="true"
+            src="/admin/rh/api/license" 
+            rowkey="id"
+            v-bind:pagination="20">
+            <template v-slot:header="">
+                <v-button icon="fa-plus" v-if="can('ADMIN_RH_LICENSE')" v-on:click.prevent="create" value="#{bundle.Create}"/>
+                <v-button icon="fa-pen" v-if="can('ADMIN_RH_LICENSE')" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount" value="#{bundle.Edit}"/>
+                <v-button icon="fa-trash" v-if="can('ADMIN_RH_LICENSE')" v-on:click.prevent="destroy" v-bind:disabled="!rowSelectedCount" value="#{bundle.Delete}"/>
+                <v-button icon="fa-book" v-on:click.prevent="open($refs.report)" value="#{bundle.Generate} #{bundle.Report}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+            </template>
+            <template v-slot="{row,index}">
+                <td class="center" v-bind:title="oo" width="28" header="#">
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="220" header="#{bundle.Worker}">
+                    <v-filter>
+                        <input v-model="filters.people"/>
+                    </v-filter>
+                    {{row.worker.code}}: {{row.worker.fullName}}
+                </td>
+                <td width="80" class="center" header="#{bundle.Fecha} #{bundle.Request}">
+                    <v-filter>
+                        <input v-model="filters.fecSoli" disabled="disabled"/>
+                    </v-filter>
+                    {{row.fecSoli|date}}
+                </td>
+                <td width="80" class="center" header="#{bundle.Hora} #{bundle.Request}">
+                    <v-filter>
+                        <input v-model="filters.horaSoli" disabled="disabled"/>
+                    </v-filter>
+                    {{row.horaSoli}}
+                    {{row.timeEnd|date('time a')}}
+                </td>
+                <td width="200" label="#{bundle.Document}">
+                    <v-filter>
+                        <input v-model="filters.document" />
+                    </v-filter>
+                    {{row.nroSoli}}
+                </td>
+                <td width="150" header="#{bundle.Type} #{bundle.Permission}">
+                    <v-filter>
+                        <v-select multiple="true" v-model="filters.type">
+                            <v-options v-bind:data="type" value-field="id">
+                                <template v-slot="{item}">
+                                    {{item.name}}
+                                </template>
+                            </v-options>
+                        </v-select>
+                    </v-filter>
+                    {{row.description}}
+                </td>
+                <td width="60" class="center" header="#{bundle.Status} #{bundle.Request}">
+                    <v-filter>
+                        <input v-model="filters.estaSoli" disabled="disabled"/>
+                    </v-filter>
+                    {{row.estaSoli}}
+                </td>
+                <td width="80" class="center" header="#{bundle.Start}">
+                    <v-filter>
+                        <input v-model="filters.fecIni" disabled="disabled"/>
+                    </v-filter>
+                    {{row.fecIni|date}}
+                </td>
+                <td width="80" class="center" header="#{bundle.End}">
+                    <v-filter>
+                        <input v-model="filters.fecFin" disabled="disabled"/>
+                    </v-filter>
+                    {{row.fecFin|date}}
+                </td>
+                <td width="200" header="#{bundle.Detalle}">
+                    <v-filter>
+                        <input v-model="filters.detail"/>
+                    </v-filter>
+                    <template v-if="row.codMovi">
+                        {{row.codMovi}}: {{row.detalle}}
+                    </template>
+                </td>
+            </template>
+        </v-table>
+        <v-panel ref="report" header="Descargar Reporte">
+            <div class="v-form v-panel">
+                <label>#{bundle.Type}:</label>
+                <v-radio-group v-model="o.option">
+                    <v-radio value="0" label="Detallado"/>
+                    <v-radio value="1" label="Resumido"/>
+                </v-radio-group>
+                <label>#{bundle.FileType}:</label>
+                <v-radio-group v-model="o['-EXTENSION']">
+                    <v-radio value="pdf" label="PDF"/>
+                    <v-radio value="xls" label="XLS"/>
+                </v-radio-group>
+                <label>#{bundle.LaborRegime}:</label>
+                <v-radio-group v-model="o.laborRegime">
+                    <v-radio value="0" label="TODOS"/>
+                    <v-radio value="1" label="NOMBRADOS, MEDIDA CAUTELAR Y SENTENCIA JUDICIAL"/>
+                    <v-radio value="2" label="CAS"/>
+                    <v-radio value="3" label="CAS DIRECTIVOS"/>
+                </v-radio-group>
+                <center>
+                    <v-button icon="fa-download" value="#{bundle.Download}" v-on:click.prevent="download"/>
+                    <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+                </center>
+            </div>
+        </v-panel>
+    </v-form>
+    <script>
+        _.ui({
+            data: {
+                o:{'-EXTENSION':'pdf'},
+                type:[
+                    {id:'P',name:'Papeleta'},
+                    {id:'J',name:'Justificación'},
+                    {id:'L',name:'Licencia'},
+                    {id:'O',name:'Onomastico'},
+                    {id:'V',name:'Vacaciones'},
+                    {id:'LGH',name:'Licencia con Goce de Haber'},
+                    {id:'LP',name:'Licencia por Paternidad'},
+                    {id:'LF',name:'Licencia por Fallecimiento'},
+                    {id:'LE',name:'Licencia por Enfermedad'},
+                    {id:'LM',name:'Licencia por Maternidad'},
+                    {id:'DM',name:'Descanso Médico'},
+                    {id:'DMC',name:'Descanso Médico COVID'},
+                    {id:'DHZ',name:'Dia de Huaraz - Desfile'},
+                    {id:'PLM',name:'Permiso por Lactancia Materna'}
+                ]
+            },
+            created(){
+                console.log(window.app.session);
+            },
+            methods:{
+                
+                download() {
+                    var me = this;
+                    var o = JSON.clone(me.o);
+                    var d=me.getSelected();
+                    if(d.length){
+                        o.people=d[0].worker.code;
+                    }
+                    me.saveAs('/admin/rh/api/license/download', o);
+                }
+            }
+        });
+    </script>
+</html>

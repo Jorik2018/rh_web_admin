@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition template="/template.xhtml">
+        <ui:param name="NODE_TITLE" value="#{bundle.Ballots}" />
+        <ui:define name="body">
+            <c:set value="#{systemController.access('ADMIN_RH_PERPAPELETA')}" var="ADMIN_RH_PERPAPELETA"/>
+            <h:form id="PerPapeletaList">
+                <p:panel header="#{NODE_TITLE}">
+                    <p:dataTable id="datalist" value="#{ballotController.dataModel}" var="item"
+                                 selection="#{ballotController.selectedList}"
+                                 paginator="true"
+                                 rowIndexVar="riv"
+                                 rowKey="#{item.id}"
+                                 rows="50"
+                                 rowsPerPageTemplate="50,100,150,200"
+                                 scrollable="true"
+                                 lazy="true"
+                                 rowStyleClass="#{empty item.HIng?(item.ext[1] gt 3?'red':'yellow'):(item.ext[2] gt 3?'red':empty item.HSal?'yellow':'')}"
+                                 >
+
+                        <f:facet name="header">
+                            <p:commandButton id="createButton" rendered="#{ADMIN_RH_PERPAPELETA}" icon="ui-icon-plus" styleClass="on" value="#{bundle.Create}" actionListener="#{viewParam.x(ballotController.prepareCreate()).o('/rh/papeleta/Create.xhtml','BallotForm').set('UPDATE','PerPapeletaList')}" />
+                            <p:commandButton id="editButton" rendered="#{ADMIN_RH_PERPAPELETA}" icon="ui-icon-pencil" value="#{bundle.Edit}" actionListener="#{viewParam.o('/rh/papeleta/Create.xhtml','BallotForm').set('UPDATE','PerPapeletaList')}" />
+                            <p:commandButton id="deleteButton" rendered="#{ADMIN_RH_PERPAPELETA}" icon="ui-icon-trash"  value="#{bundle.Delete}" actionListener="#{viewParam.set('CONTROLLER',ballotController).set('ACTION','delete').include('/configuration/Confirm.xhtml').set('UPDATE','PerPapeletaList:datalist').update('Delete')}" oncomplete="_.o('Delete',args)" />
+                        </f:facet>
+                        <p:column selectionMode="multiple"  styleClass="checked-column"/>
+
+                        <p:column class="center" width="28" >
+                            <f:facet name="header">
+                                <h:outputText value="#"/>
+                            </f:facet>
+                            <h:outputText value="#{riv+1}" title="#{item.id}">
+                                <f:convertNumber pattern="000" />
+                            </h:outputText>
+                        </p:column>
+                        <ui:include src="/widget/peopleColumn.xhtml" >
+                            <ui:param value="#{true}" name="FILTER"/>
+                            <ui:param value="#{sessionController.pp['people']}" name="filter"/>
+                            <ui:param value="#{item.people}" name="people"/>
+                        </ui:include>
+                        <p:column width="200" filterBy="#{sessionController.pp['lugar']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['lugar']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="#{bundle.Lugar}"/>
+                            </f:facet>
+                            <h:outputText value="#{item.lugar}"/>
+                        </p:column>
+                        <p:column width="200" filterBy="#{sessionController.pp['especificar']}">
+                            <f:facet name="filter" >
+                                <p:inputText  value="#{sessionController.pp['especificar']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Motivo"/>
+                            </f:facet>
+                            <h:outputText value="#{item.especificar}"/>
+                        </p:column>
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['fechaEfectiva']}">
+                            <f:facet name="filter" >
+                                <p:inputText type="hidden" id="fechaEfectiva"  class="x-date-filter"  value="#{sessionController.pp['fechaEfectiva']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Fecha Efectiva"/>
+                            </f:facet>
+                            <h:outputText value="#{item.fechaEfectiva}">
+                                <f:convertDateTime pattern="dd/MM/yyyy"  />
+                            </h:outputText>
+                        </p:column>
+                        
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['hSal']}">
+                            <f:facet name="filter" >
+                                <p:inputText type="hidden" id="hSal"  class="x-date-filter"  value="#{sessionController.pp['hSal']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Salida"/>
+                            </f:facet>
+                            <h:outputText value="#{item.HSal}">
+                                <f:convertDateTime pattern="HH:mm:ss"  />
+                           
+                            </h:outputText>
+                            <h:outputText style="display: block" value="#{empty item.ext[2]?item.ext[1]:null}"/>
+                        </p:column>
+                        <p:column width="80" class="center" filterBy="#{sessionController.pp['hIng']}">
+                            <f:facet name="filter" >
+                                <p:inputText type="hidden" id="hIng"  class="x-date-filter"  value="#{sessionController.pp['hIng']}" />
+                            </f:facet>
+                            <f:facet name="header">
+                                <h:outputText value="Ingreso"/>
+                            </f:facet>
+                            <h:outputText value="#{item.HIng}">
+                                <f:convertDateTime pattern="HH:mm:ss"  />
+                            </h:outputText>
+                            <h:outputText style="display: block" value="#{item.ext[2]}"/>
+                        </p:column>
+                        <p:column/>
+                    </p:dataTable>
+                </p:panel>
+            </h:form>
+            <p:outputPanel id="BallotFormFragment">
+                <ui:include rendered="#{viewParam.p['BallotForm']!=null and employeeController.selected.people.ext!=null}" src="#{viewParam.p['BallotForm']}"/>
+            </p:outputPanel>
+        </ui:define>
+    </ui:composition>
+
+</html>

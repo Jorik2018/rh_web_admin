@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:v-on="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-for="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-bind="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:v-slot="http://xmlns.jcp.org/jsf/passthrough"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.14.1/xlsx.full.min.js"></script>
+    <v-form header="#{NODE_TITLE}" action="/admin/rh/assist">
+        <v-table v-bind:selectable="true"
+                 v-bind:scrollable="true"
+                 ref="table"
+                 v-bind:pagination="50"
+                 src="/admin/rh/api/attendance" >
+            <template v-slot:header="">
+                <v-uploader v-on:input="upload" class="on"/>
+                <v-button icon="fa-pen" v-on:click.prevent="edit" v-bind:disabled="!rowSelectedCount" value="#{bundle.Edit}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="refresh" title="#{bundle.Refresh}"/>
+                <v-button icon="fa-sync" v-on:click.prevent="open($refs.syncDlg)" value="Sincronizar Dispositivos"/>
+                <v-button icon="fa-download" 
+                          v-on:click.prevent="o.employee=rowSelectedCount?{people:{code:getSelected()[0].code,id:getSelected()[0].idDir,fullName:getSelected()[0].fullName}}:null;open($refs.reportDlg)" 
+                          title="#{bundle.Download}"/>
+            </template>    
+            <template v-slot="{row,index}">
+                <td width="28" v-bind:title="'ID='+row.id" class="center" header="#"  t="s">
+                    {{pad(index+1,3)}}
+                </td>
+                <td width="80" class="center" header="#{bundle.Code}">
+                    <v-filter>
+                        <input class="center" v-model="filters.code"/>
+                    </v-filter>
+                    {{row.code}}
+                </td>
+                <td width="250" header="#{bundle.FullName}" v-bind:title="'PEOPLE='+row.idDir">
+                    <v-filter>
+                        <input v-model="filters.people"/>
+                    </v-filter>
+                    {{row.fullName}}
+                </td>
+                <td width="40" class="center" header="D">
+                    {{row.dayName}}
+                </td>
+                <td width="80" class="center" header="#{bundle.Date}" t="s">
+                    {{row.date|date('dMY')}}
+                </td>
+                <td width="80" class="center" header="Ingreso" t="s" >
+                    {{row.entryTime|date('time a')}}
+                </td>
+                <td width="80" class="center" header="Retraso Ingreso" t="s" >
+                    <div v-bind:title="row.entryDelaySeconds" v-bind:class="row.entryDelaySeconds>(10*60+59)?'red':'yellow'">
+                        {{row.entryDelay}}
+                    </div>
+                </td>
+                <td width="80" class="center" header="Refrigerio" t="s" >
+                    {{row.breakTime|date('time a')}}
+                </td>
+                <td width="80" class="center" header="Retraso Refrigerio" t="s" >
+                    <div v-bind:class="row.breakDelaySeconds>(5*60+59)?'red':'yellow'">
+                        {{row.breakDelay}}
+                    </div>
+                </td>
+                <td width="80" class="center" header="Salida" t="s" >
+                    {{row.outTime|date('time a')}}
+                </td>
+                <td header="#{bundle.Justification}" width="160">
+                    {{row.justification}}
+                </td>
+            </template>
+        </v-table>
+        <v-panel header="Sincronizar Dispositivo" ref="syncDlg" style="display: none;">
+            <div class="v-form v-panel">
+                <label>Dispositivo:</label>
+                <v-number v-model="o.device"/>
+                <label>#{bundle.From}:</label>
+                <v-calendar v-model="o.from"/>
+                <label>#{bundle.To}:</label>
+                <v-calendar v-model="o.to"/>
+                <center>
+                    <v-button icon="fa-sync" value="#{'Sincronizar'}" v-on:click.prevent="sync"/>
+                    <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+                </center>
+            </div>
+        </v-panel>
+        <v-panel header="Generar Reporte" ref="reportDlg" style="display: none;">
+            <div class="v-form v-panel">
+                <v-fieldset legend="Tipo">
+                    <v-radio-group v-model="o.option">
+                        <v-radio label="Asistencia" value="1"></v-radio>
+                        <v-radio label="Faltas y Tardanzas Mensual" value="2"></v-radio>
+                        <v-radio label="Faltas y Tardanzas Diaria" value="3"></v-radio>
+                    </v-radio-group>
+                </v-fieldset>
+                <v-fieldset v-if="o.option!=3" legend="Agrupamiento">
+                    <div v-for="g in o.group" style="background-color: #3e0f0f;
+    border: 1px solid gray;
+    padding: 5px;position:relative;
+    border-radius: 5px;
+    margin-bottom: 5px;">
+                        {{g.name}}
+                        <v-select style="margin-top:5px;" v-model="o.laborRegimeId" v-if="g.id=='LR'">
+                    <option>-- TODOS --</option>
+                    <v-options value-field="id" storage="region" url="/admin/rh/api/labor-regime/0/0">
+                        <template v-slot="{item}">
+                            {{item.name}}
+                        </template>
+                    </v-options>
+                </v-select>
+                        <div style="float:right;cursor: pointer;position:absolute;right:5px;top:5px" 
+                             v-on:click="o.group=o.group.filter(v=>v.id!=g.id);groupSelected=null">
+                            <i class="fa fa-times"></i>
+                            
+                        </div>
+                    </div>
+                    <v-select v-if="filteredGroup.length" v-model="groupSelected" v-on:input="inputGroup">
+                        <option value="">--Seleccionar grupo--</option>
+                        <option v-for="g in filteredGroup" v-bind:label="g.name" v-bind:value="g.id"></option>
+                    </v-select>
+                </v-fieldset>
+                <v-fieldset>
+                    <template v-if="o.option==3">
+                        <label>Persona:</label>
+                        <v-autocomplete queryEvent="enter" placeholder="Ingrese mas de 2 letras y presione ENTER" 
+                                minQueryLength="3" 
+                                emptyMessage="Buscar por nombre (2 caracteres min.)" 
+                                required="required" 
+                                v-model="o.employee" src="/admin/rh/api/employee"
+                                >
+                            <template v-slot="{row}">
+                                <div v-if="row.laborRegimeName">{{row.laborRegimeName}}</div>
+                                {{row.people.code}}: {{row.people.fullName}}
+                            </template>
+                            <template v-slot:label="{selected}">
+                                {{selected.people.code}}: {{selected.people.fullName}}
+                            </template>
+                        </v-autocomplete>
+                        <label>Desde:</label>
+                        <v-calendar v-model="o.from"/>
+                        <label>Hasta:</label>
+                        <v-calendar v-model="o.to"/>
+                    </template>
+                    <template v-if="3>o.option">
+                        <label>Año:</label>
+                        <v-number v-model="o.year"/>
+                        <label>Mes:</label>
+                        <v-select v-model="o.month">
+                            <option v-for="(m,i) in month" v-bind:selected="i+1==o.month" 
+                                    v-bind:value="i+1">{{m}}</option>
+                        </v-select>
+                        <label>Dia:</label>
+                        <v-number v-model="o.day"/>
+                    </template>
+                </v-fieldset>
+                 <v-fieldset v-if="!(o.option==3 &amp;&amp; o.employee)" legend="Modalidad de Trabajo">
+                    <v-radio-group v-model="o.workMode">
+                        <v-radio label="Todos" value="T"></v-radio>
+                        <v-radio label="Presencial" value="P"></v-radio>
+                        <v-radio label="Remoto" value="R"></v-radio>
+                        <v-radio label="Mixto" value="M"></v-radio>
+                    </v-radio-group>
+                </v-fieldset>
+                <v-fieldset >
+                    <label>Formato de Salida:</label>
+                    <v-radio-group v-model="o['-EXTENSION']">
+                        <v-radio value="pdf" label="Documento de Formato Portable (pdf)"/>
+                        <v-radio value="xls" label="Hoja de Calculo Excel (xls)"/>
+                    </v-radio-group>
+                </v-fieldset>
+                <center>
+                    <v-button icon="fa-download" value="#{bundle.Download}" v-on:click.prevent="download"/>
+                    <v-button icon="fa-ban" value="#{bundle.Cancel}" v-on:click.prevent="close"/>
+                </center>
+            </div>
+        </v-panel>
+    </v-form>
+    <script>
+        _.ui({
+            data(){
+                var d=new Date();
+                var firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+                return{o:{
+                        workMode:'T',
+                        group:[],
+                        employee:null,
+                        '-EXTENSION':'pdf',
+                        from:firstDay.getTime(),to:d.getTime(),delay:false,option:1,month:d.getMonth()+1,
+                        year:d.getFullYear(),device:1
+                    },
+                    groupSelected:null,
+                    group:[
+                        {id:'DE',name:'Area'},
+                        {id:'LR',name:'Regimen Laboral'}
+                    ]
+                };
+            },
+            computed:{
+                filteredGroup(){
+                    return this.group.filter(g=>this.o.group.map(o=>o.id?o.id:o).indexOf(g.id)==-1);
+                }
+            },
+            mounted(){
+                console.log(this.user);
+            },
+            methods: {
+                inputGroup(e,e2){
+                    if(e){
+                        this.o.group.push(this.group.filter(g=>g.id==e)[0]);
+                        e2.select.selectedIndex=0;
+                    }
+                },
+                upload(o) {
+                    var me = this;
+                    axios.post('/admin/rh/api/assist/import/' + o.tempFile).then((e)=>{
+                        console.log(e);
+                    });
+                },
+                sync() {
+                    var me = this,o=me.o;
+                    axios.post('/api/zk/'+o.device+'/sync-attendance', o).then((e)=>{
+                        console.log(e);
+                    });
+                },
+                download() {
+                    var me=this,o = JSON.clone(me.o);
+                    o.groups=o.group.map(e=>e.id?e.id:e).join(',');
+                    if(o.option==3){
+                        if(o.employee)o.people=o.employee.people.id;
+                        if(typeof o.date==='string')o.date=new Date(o.date).getTime();
+                        me.saveAs('/admin/rh/api/attendance/download', o);
+                    }else
+                        axios.post('/admin/rh/api/attendance/report',o).then(r => {
+                            var fo = new FormData();
+                            fo.append("file",
+                                new Blob(
+                                    [JSON.stringify(r.data)], 
+                                    {type: 'text/plain'}), "data.json");
+                            fo.append("template",r.data.template);
+                            fo.append("filename","data.json");
+                            fo.append("output","assist."+o['-EXTENSION']);
+                            me.saveAs('/api/jreport/', fo);
+                        });
+                }
+            }
+        });
+    </script>
+    <style>
+        .red,.yellow{
+            color:black;
+        }
+    </style>
+</html>

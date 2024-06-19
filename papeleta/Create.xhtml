@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core">
+    <ui:composition>
+        <c:set value="#{ballotController.selected}" var="o"/>
+        <p:dialog id="BallotForm" header="#{(empty o.id?bundle.Create:bundle.Edit)} #{bundle.Ballot}">
+            <h:form id="PerPapeletaCreateForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="1" rendered="#{o != null}">
+                        <p:outputLabel value="Trabajador:" for="people" />
+                        <ui:include src="/widget/personaNaturalAutocomplete.xhtml">
+                            <ui:param value="${o.people}" name="VALUE" />
+                            <ui:param value="people" name="ID" />
+                            <ui:param value="#{true}" name="REQUIRED" />
+                        </ui:include>
+                        <p:outputLabel value="#{bundle.Type}:" for="condicion" />
+                        <p:selectOneRadio id="condicion" class="required" columns="1"     
+                                          value="#{o.idTm}" layout="grid"
+                                         required="true">
+                            <f:selectItems value="#{o.REASON_TYPE.entrySet()}"
+                                           var="t" itemValue="#{t.key}" itemLabel="#{t.value}" />
+                        </p:selectOneRadio>
+                        <p:outputLabel value="#{bundle.Lugar}:" for="lugar" />
+                        <p:inputTextarea required="true" id="lugar" value="#{o.lugar}" title="#{bundle.Lugar}" />
+                        <p:outputLabel value="Motivo:" for="especificar" />
+                        <p:inputTextarea required="true" id="especificar" value="#{o.especificar}" title="#{bundle.Especificar}" />
+                        <p:outputLabel value="Fecha:" for="fechaEfectiva" />
+                        <p:calendar id="fechaEfectiva" required="true" value="#{o.fechaEfectiva}" pattern="dd/MM/yyyy" showHour="true"  showOn="button"/>
+                        <p:outputLabel value="Salida:" for="hSal" />
+                        <p:calendar id="hSal" value="#{o.HSal}" pattern="HH:mm" showHour="true"  showOn="button"/>
+                        <p:outputLabel value="Ingreso:" for="hIng" />
+                        <p:calendar id="hIng" value="#{o.HIng}" pattern="HH:mm" showHour="true"  showOn="button"/>
+                    </p:panelGrid>
+                    <center>
+                        <p:commandButton icon="ui-icon-disk" actionListener="#{ballotController.create}" value="#{bundle.Save}" update="display,:growl" oncomplete="return _.c(this,args)"/>
+                        <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                    </center>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>

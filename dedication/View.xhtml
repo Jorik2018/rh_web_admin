@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:c="http://xmlns.jcp.org/jsp/jstl/core"
+      xmlns:p="http://primefaces.org/ui">
+
+    <ui:composition>
+
+        <c:set value="#{perdedicacionController.selected}" var="o"/>
+        <p:dialog id="PerDedicacionView" modal="true" resizable="false" appendTo="@(body)" header="#{bundle.ViewWarrantTitle}">
+            <h:form id="PerDedicacionViewForm">
+                <h:panelGroup id="display">
+                    <p:panelGrid columns="2" rendered="#{o != null}">
+                        <h:outputText value="#{bundle.Iddedicacion}"/>
+                        <h:outputText value="#{o.iddedicacion}" title="#{bundle.Iddedicacion}"/>
+                        <h:outputText value="#{bundle.Nombre}"/>
+                        <h:outputText value="#{o.nombre}" title="#{bundle.Nombre}"/>
+                        <h:outputText value="#{bundle.Sigla}"/>
+                        <h:outputText value="#{o.sigla}" title="#{bundle.Sigla}"/>
+                        <h:outputText value="#{bundle.Parcial}"/>
+                        <h:outputText value="#{o.parcial}" title="#{bundle.Parcial}"/>
+                    </p:panelGrid>
+                    <center>
+                        <p:button icon="ui-icon-cancel" value="#{bundle.Cancel}" onclick="return _.c(this)"/>
+                    </center>
+                </h:panelGroup>
+            </h:form>
+        </p:dialog>
+
+    </ui:composition>
+</html>
